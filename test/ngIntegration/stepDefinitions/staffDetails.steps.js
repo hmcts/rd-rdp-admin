@@ -18,7 +18,7 @@ defineSupportCode(function ({ And, But, Given, Then, When }) {
         });
     });
 
-    
+
     Given('I set MOCK upload success', async function () {
         MockApp.onPost('/api/caseworkerdetails', (req, res) => {
             cucumberReporter.AddMessage("Staff details upload request received by Mock app. Returning success");

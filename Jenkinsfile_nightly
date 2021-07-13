@@ -14,7 +14,7 @@ properties([
 @Library("Infrastructure")
 
 def type      = "nodejs"
-def product   = "xui"
+def product   = "rpx"
 def component = "webapp"
 def channel   = '#xui-pipeline'
 def vault = "rpx"
@@ -42,12 +42,18 @@ static LinkedHashMap<String, Object> secret(String secretName, String envVar) {
 withNightlyPipeline(type, product, component) {
     enableSlackNotifications(channel)
     loadVaultSecrets(secrets)
+    enableFortifyScan()
     // enableSecurityScan()
     enableFullFunctionalTest(30)
     enableMutationTest()
     enableCrossBrowserTest()
     env.TEST_URL = 'https://administer-orgs.aat.platform.hmcts.net'
     after('checkout') {sh 'yarn cache clean'}
+
+    before('fullFunctionalTest') {
+        steps.archiveArtifacts allowEmptyArchive: true, artifacts: '**/test/java/Fortify Reports/**/*'
+    }
+
     after('build') {
         sh 'npm run build'
         publishHTML([
@@ -66,6 +72,10 @@ withNightlyPipeline(type, product, component) {
             reportFiles          : 'index.html',
             reportName           : 'ng lint Report'
         ])
+    }
+
+    after('fortify-scan') {
+        steps.archiveArtifacts allowEmptyArchive: true, artifacts: '**/Fortify Scan/**/*'
     }
 
     after('fullFunctionalTest') {
